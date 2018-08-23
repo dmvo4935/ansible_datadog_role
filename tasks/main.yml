@@ -1,0 +1,9 @@
+---
+
+- include: "{{ansible_os_family}}.yml"
+
+- include: agent6.yml
+  when: ansible_os_family != "Windows"
+
+- include: agent6_win.yml
+  when: ansible_os_family == "Windows"

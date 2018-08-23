@@ -1,0 +1,37 @@
+---
+# tasks file for datadog_agent
+
+- name: Download installation file
+  win_get_url:
+      dest: 'C:\Users\{{ansible_user}}\Documents\datadog-agent-6-latest.amd64.msi' # required. The location to save the file at the URL.,Be sure to include a filename and extension as appropriate.
+      url: https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-6-latest.amd64.msi # required. The full URL of a file to download.
+      validate_certs: no # not required. This option is deprecated since v2.4, please use C(validate_certs) instead.,If C(yes), SSL certificates will not be validated. This should only be used on personally controlled sites using self-signed certificates.
+
+- name: Install agent
+  win_command: "msiexec /qn /lv C:\\Users\\{{ansible_user}}\\Documents\\datadog_install.log /i C:\\Users\\{{ansible_user}}\\Documents\\datadog-agent-6-latest.amd64.msi APIKEY=\"{{datadog_api_key}}\"  HOSTNAME=\"{{inventory_hostname}}\" TAGS=\"customer:{{customer}}\""
+
+- name: Change agent
+  block:
+   - name: Adding tag 'customer:{{customer}}'
+     win_lineinfile:
+       path: 'C:\ProgramData\Datadog\datadog.yaml'
+       line: "tags: customer:{{customer}}"
+       regexp: "^tags:.+$"
+   - name: Change API key
+     win_lineinfile:
+       path: 'C:\ProgramData\Datadog\datadog.yaml'
+       line: "api_key: {{datadog_api_key}}"
+       regexp: "^api_key:.+$"
+     notify: agent_restart
+  when: update_agent is defined
+
+- name: Enable Live Processes collection
+  block:
+   - win_lineinfile:
+       path: 'C:\ProgramData\Datadog\datadog.yaml'
+       line: 'process_config:'
+   - win_lineinfile:
+       path: 'C:\ProgramData\Datadog\datadog.yaml'
+       line: '  enabled: "true"'
+       insertafter: '^process_config:$'
+     notify: agent_restart

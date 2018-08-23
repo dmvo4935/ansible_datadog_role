@@ -1,0 +1,15 @@
+---
+# handlers file for datadog_agent
+
+- name: agent_restart
+  win_service:
+    name: DatadogAgent
+    state: restarted
+    force_dependent_services: yes
+
+- name: restart datadog-agent
+  service:
+    name: datadog-agent
+    state: restarted
+  when: datadog_enabled
+

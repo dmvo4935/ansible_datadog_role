@@ -1,0 +1,14 @@
+---
+
+- name: Ensure configuration directories are present for each Datadog check
+  win_file:
+    path: "C:\\ProgramData\\Datadog\\conf.d\\{{ item }}.d"
+    state: directory
+  with_items: '{{ datadog_checks|list }}'
+
+- name: Create a configuration file for each Datadog check
+  win_template:
+    src: checks.yaml.j2
+    dest: "C:\\ProgramData\\Datadog\\conf.d\\{{ item }}.d\\conf.yaml"
+  with_items: '{{ datadog_checks|list }}'
+  notify: agent_restart

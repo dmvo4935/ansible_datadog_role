@@ -5,20 +5,6 @@
     dest: /etc/datadog-agent
     state: directory
 
-- name: Verify docker group is present
-  shell: getent group docker
-  register: docker_grp_result
-  check_mode: no
-  ignore_errors: yes
-
-- name: Added datadog agent to docker group
-  user:
-   name: dd-agent
-   groups:
-   - docker
-   append: yes
-  when: docker_grp_result.rc == 0
-
 - name: Create main Datadog agent yaml configuration file (beta)
   template:
     src: datadog.yaml.j2

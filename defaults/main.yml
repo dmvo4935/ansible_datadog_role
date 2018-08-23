@@ -38,6 +38,3 @@ datadog_agent5: no
 
 #default api_key
 datadog_api_key: <put here your 32-sign value>
-
-datadog_nexthink_password: <nexthink portal DB user>
-nexthink_portal_url: <URL to nexthink portal>

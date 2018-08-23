@@ -3,12 +3,12 @@
 
 - name: Download installation file
   win_get_url:
-      dest: 'C:\temp\datadog-agent-6-latest.amd64.msi' # required. The location to save the file at the URL.,Be sure to include a filename and extension as appropriate.
+      dest: 'C:\Users\{{ansible_user_id}}\Documents\datadog-agent-6-latest.amd64.msi' # required. The location to save the file at the URL.,Be sure to include a filename and extension as appropriate.
       url: https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-6-latest.amd64.msi # required. The full URL of a file to download.
       validate_certs: no # not required. This option is deprecated since v2.4, please use C(validate_certs) instead.,If C(yes), SSL certificates will not be validated. This should only be used on personally controlled sites using self-signed certificates.
 
 - name: Install agent
-  win_command: "msiexec /qn /lv C:\\temp\\datadog_install.log /i C:\\temp\\datadog-agent-6-latest.amd64.msi APIKEY=\"{{datadog_api_key}}\"  HOSTNAME=\"{{inventory_hostname}}\" TAGS=\"customer:{{customer}}\""
+  win_command: "msiexec /qn /lv C:\\Users\\{{ansible_user_id}}\\Documents\\datadog_install.log /i C:\\Users\\{{ansible_user_id}}\\Documents\\datadog-agent-6-latest.amd64.msi APIKEY=\"{{datadog_api_key}}\"  HOSTNAME=\"{{inventory_hostname}}\" TAGS=\"customer:{{customer}}\""
 
 - name: Change agent
   block:

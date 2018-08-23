@@ -26,8 +26,13 @@ win_datadog_checks:
             tags:
               - System event log
               - customer:{{customer}}
-            
 
+linux_datadog_checks:
+   process:
+       init_config:
+       instances:
+          - name: ssh
+            search_string: ['sshd']
 
 AD_datadog_checks:
       active_directory:

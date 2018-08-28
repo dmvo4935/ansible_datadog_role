@@ -21,10 +21,8 @@ win_datadog_checks:
               - InsertionStrings
               - TimeGenerated
               - Type
-            event_id:
-              - "-10016"
             tags:
-              - System event log
+              - win32_event_log:system
               - customer:{{customer}}
 
 linux_datadog_checks:

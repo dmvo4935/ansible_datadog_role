@@ -7,8 +7,66 @@
       url: https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-6-latest.amd64.msi # required. The full URL of a file to download.
       validate_certs: no # not required. This option is deprecated since v2.4, please use C(validate_certs) instead.,If C(yes), SSL certificates will not be validated. This should only be used on personally controlled sites using self-signed certificates.
 
+- name: Get product ID from agent's MSI package
+  block:
+  - win_copy:
+     content: |
+         ## usage: .\Get-MSIFileInformation.ps1 -Path "D:\Source$\Apps\7-zip\7z920-x64.msi" -Property ProductCode
+         param(
+         [parameter(Mandatory=$true)]
+         [ValidateNotNullOrEmpty()]
+         [System.IO.FileInfo]$Path,
+         [parameter(Mandatory=$true)]
+         [ValidateNotNullOrEmpty()]
+         [ValidateSet("ProductCode", "ProductVersion", "ProductName", "Manufacturer", "ProductLanguage", "FullVersion")]
+         [string]$Property
+            )
+         Process {
+           try {
+              # Read property from MSI database
+              $WindowsInstaller = New-Object -ComObject WindowsInstaller.Installer
+              $MSIDatabase = $WindowsInstaller.GetType().InvokeMember("OpenDatabase", "InvokeMethod", $null, $WindowsInstaller, @($Path.FullName, 0))
+              $Query = "SELECT Value FROM Property WHERE Property = '$($Property)'"
+              $View = $MSIDatabase.GetType().InvokeMember("OpenView", "InvokeMethod", $null, $MSIDatabase, ($Query))
+              $View.GetType().InvokeMember("Execute", "InvokeMethod", $null, $View, $null)
+              $Record = $View.GetType().InvokeMember("Fetch", "InvokeMethod", $null, $View, $null)
+              $Value = $Record.GetType().InvokeMember("StringData", "GetProperty", $null, $Record, 1)
+              # Commit database and close view
+              $MSIDatabase.GetType().InvokeMember("Commit", "InvokeMethod", $null, $MSIDatabase, $null)
+              $View.GetType().InvokeMember("Close", "InvokeMethod", $null, $View, $null)
+              $MSIDatabase = $null
+              $View = $null
+              # Return the value
+              return $Value
+             }
+             catch {
+                Write-Warning -Message $_.Exception.Message ; break
+                }
+              }
+         End {
+         # Run garbage collection and release ComObject
+           [System.Runtime.Interopservices.Marshal]::ReleaseComObject($WindowsInstaller) | Out-Null
+           [System.GC]::Collect()
+             }
+     dest: 'C:\users\{{ansible_user_id}}\Documents\get_msiinfo.ps1'
+  - win_shell:  'C:\users\{{ansible_user_id}}\Documents\get_msiinfo.ps1 -Path C:\\Users\\{{ansible_user_id}}\\Documents\\datadog-agent-6-latest.amd64.msi -Property ProductCode'
+    check_mode: no
+    register: package_id
+  - debug:
+     msg: "Got MSI package ID: {{package_id.stdout_lines[0]}}"
+
+
 - name: Install agent
-  win_command: "msiexec /qn /lv C:\\Users\\{{ansible_user_id}}\\Documents\\datadog_install.log /i C:\\Users\\{{ansible_user_id}}\\Documents\\datadog-agent-6-latest.amd64.msi APIKEY=\"{{datadog_api_key}}\"  HOSTNAME=\"{{inventory_hostname}}\" TAGS=\"customer:{{customer}}\""
+  win_package:
+   path: "C:\\Users\\{{ansible_user_id}}\\Documents\\datadog-agent-6-latest.amd64.msi"
+   product_id: "{{package_id}}"
+   arguments: 
+    - /qn 
+    - "/lv C:\\Users\\{{ansible_user_id}}\\Documents\\datadog_install.log" 
+    - APIKEY="{{datadog_api_key}}"  
+    - HOSTNAME="{{inventory_hostname}}"
+    - TAGS="customer:{{customer}}"
+#  win_command: "msiexec /qn /lv C:\\Users\\{{ansible_user_id}}\\Documents\\datadog_install.log /i C:\\Users\\{{ansible_user_id}}\\Documents\\datadog-agent-6-latest.amd64.msi APIKEY=\"{{datadog_api_key}}\"  HOSTNAME=\"{{inventory_hostname}}\" TAGS=\"customer:{{customer}}\""
 
 - name: Change agent
   block:

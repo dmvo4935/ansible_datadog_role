@@ -49,12 +49,11 @@
            [System.GC]::Collect()
              }
      dest: 'C:\users\{{ansible_user_id}}\Documents\get_msiinfo.ps1'
-  - win_shell:  'C:\users\{{ansible_user_id}}\Documents\get_msiinfo.ps1 -Path C:\\Users\\{{ansible_user_id}}\\Documents\\datadog-agent-6-latest.amd64.msi -Property ProductCode'
-    check_mode: no
+  - win_shell:  'C:\users\{{ansible_user_id}}\Documents\get_msiinfo.ps1 -Path C:\Users\{{ansible_user_id}}\Documents\datadog-agent-6-latest.amd64.msi -Property ProductCode'
     register: package_id
   - debug:
      msg: "Got MSI package ID: {{package_id.stdout_lines[0]}}"
-
+  check_mode: no
 
 - name: Install agent
   win_package:
